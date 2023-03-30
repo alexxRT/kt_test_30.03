@@ -63,8 +63,6 @@ std::vector<std::string> number_to_parts(std::string phone_number) {
 
 class User {
     public:
-
-
         void add_new_message(std::string message) {
             message_buffer.push_back(message);
             std::cout << "ok\n";
@@ -90,7 +88,15 @@ class User {
 
 class Operator {
     public:
+        ~Operator() {
+            std::unordered_map<std::string, User*>::iterator it = user_base.begin();
+            while (it != user_base.end()) {
+                delete it->second;
 
+                user_base.erase(it);
+                it++;
+            }
+        };
 
         void create_new_user(std::string phone_number) {
             phone_parts = number_to_parts(phone_number);
@@ -99,7 +105,7 @@ class Operator {
                 return;
 
             if (is_valid()) {
-                class User new_user;
+                User* new_user = new User;
                 std::string user_num = phone_parts[2];
                 user_base[user_num] = new_user;
 
@@ -123,7 +129,6 @@ class Operator {
             if (user_base.find(user_code) != user_base.end()) {
                 user_to_find = user_base[user_code];
 
-                std::cout << "user was found\n";
                 return true;
             }
             else 
@@ -134,27 +139,36 @@ class Operator {
         std::string operator_code;
         std::vector<std::string> phone_parts;
 
-        class User user_to_find;
-        std::unordered_map<std::string, class User> user_base;
+        User* user_to_find;
+        std::unordered_map<std::string, User*> user_base;
 };
 
 
 class Country {
     public:
+        ~Country() {
+            std::unordered_map<std::string, Operator*>::iterator it = operator_base.begin();
+            while (it != operator_base.end()) {
+                delete it->second;
+
+                operator_base.erase(it);
+                it++;
+            }
+        };
 
 
-        class Operator create_new_operator(std::string op_code){
+        Operator* create_new_operator(std::string op_code){
         if (find_operator(op_code)){
             std::cout << "country is already exists\n";
 
             return operator_base[op_code];
         }
         else {
-            class Operator new_operator;
+            Operator* new_operator = new Operator;
             operator_base[op_code] = new_operator;
 
-            new_operator.country_code  = country_code;
-            new_operator.operator_code = op_code;
+            new_operator->country_code  = country_code;
+            new_operator->operator_code = op_code;
 
             return new_operator;
         }
@@ -171,13 +185,23 @@ class Country {
 
     std::string country_code;
 
-    class Operator operator_to_find;
-    std::unordered_map<std::string, class Operator> operator_base;
+    Operator* operator_to_find;
+    std::unordered_map<std::string, Operator*> operator_base;
 };
 
 
 class Switch {
 public:
+    //deleting all allocated memory bloks
+    ~Switch() {
+        std::unordered_map<std::string, Country*>::iterator it = country_base.begin();
+        while (it != country_base.end()) {
+            delete it->second;
+
+            country_base.erase(it);
+            it++;
+        }
+    };
 
 
     void send(std::string phone_number, std::string message) {
@@ -186,15 +210,11 @@ public:
         if (phone_parts.size() == 0)
             return;
 
-        for (int i = 0; i < 3; i ++) {
-            std::cout << phone_parts[i] << "\n";
-        }
-
         if (find_country(phone_parts[0])) {
-            if (country_to_find.find_operator(phone_parts[1])) {
-                if (country_to_find.operator_to_find.find_user(phone_parts[2])) {
+            if (country_to_find->find_operator(phone_parts[1])) {
+                if (country_to_find->operator_to_find->find_user(phone_parts[2])) {
                     
-                    country_to_find.operator_to_find.user_to_find.add_new_message(message);
+                    country_to_find->operator_to_find->user_to_find->add_new_message(message);
                     return;
                 }
                 else {
@@ -221,10 +241,10 @@ public:
             return;
 
         if (find_country(phone_parts[0])) {
-            if (country_to_find.find_operator(phone_parts[1])) {
-                if (country_to_find.operator_to_find.find_user(phone_parts[2])) {
+            if (country_to_find->find_operator(phone_parts[1])) {
+                if (country_to_find->operator_to_find->find_user(phone_parts[2])) {
                     
-                    country_to_find.operator_to_find.user_to_find.print_last_message();
+                    country_to_find->operator_to_find->user_to_find->print_last_message();
                     return;
                 }
                 else {
@@ -244,16 +264,16 @@ public:
     };
 
 
-    class Country create_new_country(std::string country_code) {
+    Country* create_new_country(std::string country_code) {
         if (find_country(country_code)){
             std::cout << "country is already exists\n";
 
             return country_base[country_code];
         }
         else {
-            class Country new_country;
+            Country* new_country = new Country;
             country_base[country_code] = new_country;
-            new_country.country_code   = country_code;
+            new_country->country_code   = country_code;
 
             return new_country;
         }
@@ -271,29 +291,24 @@ public:
     };
 
 
-    class Country country_to_find;
+    Country* country_to_find;
     std::vector<std::string> phone_parts;
 
-    std::unordered_map<std::string, class Country> country_base;
+    std::unordered_map<std::string, Country*> country_base;
 
 };
-
-//kontrolnaya
-//code is growing, i am copying and pasting --- it sucks !!!
 
 
 int main () {
 
     class Switch new_switch;
 
-    class Country Russia;
-    Russia = new_switch.create_new_country("+7");
+    Country* Russia = new_switch.create_new_country("+7"); //same here
 
-    class Operator Beeline;
-    Beeline = Russia.create_new_operator("905");
+    Operator* Beeline = Russia->create_new_operator("905"); //i add users into a copy of operators, so it does not work
 
-    Beeline.create_new_user ("+7 905 7664566");
-    Beeline.create_new_user ("+7 905 1234578");
+    Beeline->create_new_user ("+7 905 7664566");
+    Beeline->create_new_user ("+7 905 1234578");
 
     new_switch.send("+7 905 1234578", "hello");
     
