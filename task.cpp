@@ -82,6 +82,9 @@ class User {
             return;
         };
 
+        int is_fake;        //shows wheather  its mask number or real
+        User* transferring; // if its a mask, it has pointer inside to the real user.
+
         std::vector<std::string> message_buffer;
 };
 
@@ -101,8 +104,8 @@ class Operator {
         void create_new_user(std::string phone_number) {
             phone_parts = number_to_parts(phone_number);
 
-            if (phone_parts.size() < 3)
-                return;
+            if (phone_parts.size() < 3) // country code // operator code //  number //
+                return;                 //    +7        //      905      // 1234578 //
 
             if (is_valid()) {
                 std::string user_num = phone_parts[2];
@@ -113,14 +116,72 @@ class Operator {
                 }
                 else {
                     User* new_user = new User;
-            
+
+                    new_user->is_fake = 0;          //creating real user
                     user_base[user_num] = new_user;
                     std::cout << "new user added\n";
                 }
             }
-            else {
+            else
                 std::cout << "the phone you entered is invalid for this operator\n";
+        };
+
+
+        void create_new_hidden_user(std::string mask_number, std::string phone_number) {
+            User* new_fake_user = nullptr;
+
+            if (validation(mask_number)){
+                std::string mask = phone_parts[2];
+
+                if (find_user(mask)) {
+                    std::cout << "this number in use, think about different mask\n";
+                }
+                else {
+                    new_fake_user = new User;
+                    new_fake_user->is_fake = 1;
+
+                    user_base[mask] = new_fake_user;
+                }
+
             }
+            else
+                std::cout << "The mask you entered is invalid for this operator\n";
+
+
+            if (validation(phone_number)){
+                std::string number = phone_parts[2];
+
+                if (find_user(number)) {
+                    std::cout << "the number u chose is in use\n";
+                }
+                else {
+                    if (new_fake_user != nullptr) {
+                        User* new_user = new User;    
+                        new_user->is_fake = 0;
+                        new_fake_user->transferring = new_user;
+
+                        user_base[number] = new_user;
+                    }
+                    else 
+                        std::cout << "the mask is invalid. TRUE user wasn't not created";
+                }
+            }
+            else
+                std::cout << "the phone you entered is invalid for this operator\n";
+        };
+
+
+        bool validation(std::string number){
+            phone_parts = number_to_parts(number);
+
+            if (phone_parts.size() < 3)
+                return false; 
+
+            else if (!is_valid())
+                return false;
+            
+            else 
+                return true;
         };
 
         bool is_valid () {
@@ -221,9 +282,14 @@ public:
         if (find_country(phone_parts[0])) {
             if (country_to_find->find_operator(phone_parts[1])) {
                 if (country_to_find->operator_to_find->find_user(phone_parts[2])) {
-                    
-                    country_to_find->operator_to_find->user_to_find->add_new_message(message);
-                    return;
+
+                    User* user = country_to_find->operator_to_find->user_to_find;
+
+                    if (!user->is_fake)
+                        user->add_new_message(message);
+                    else 
+                        user->transferring->add_new_message(message);
+
                 }
                 else {
                     std::cout << "number is incorrect\n";
@@ -316,18 +382,23 @@ int main () {
 
     Operator* Beeline = Russia->create_new_operator("905");
 
-    Beeline->create_new_user ("+7 905 7664566"); //print successfully added user
-    Beeline->create_new_user ("+7 905 7664566"); //print two same numbers are impossible
-    Beeline->create_new_user ("+8 906 7738766"); //print invalide country code, operator code
+    std::cout << "\n\n-------------------------------------------------\n\n";
 
-    Beeline->create_new_user ("+7 905 1234578"); //print successfully added user
+    Beeline->create_new_user("+7 905 7664566"); //print successfully added user
+    Beeline->create_new_user("+7 905 7664566"); //print two same numbers are impossible
+    Beeline->create_new_user("+8 906 7738766"); //print invalide country code, operator code
 
-    new_switch.send("+7 905 124578", "hello"); //print that number is incorrect
-    new_switch.send("+7 905 1234578", "how are u"); //print ok
+    Beeline->create_new_hidden_user("+7 905 0000000", "+7 905 1234578"); //print successfully added user
+
+    new_switch.send("+7 905 12898"  , "hello");      //print that number is incorrect
+
+    new_switch.send("+7 905 0000000", "how are u");  //print ok, sent message to +7 905 1234578
+    new_switch.send("+7 905 7664566", "feels good"); //print ok
 
     new_switch.read("+7 905 1234578"); //print messages
     new_switch.read("+7 905 7664566"); //print messages
 
+    std::cout << "\n-------------------------------------------------\n\n";
 
     return 0;
 }
