@@ -101,21 +101,27 @@ class Operator {
         void create_new_user(std::string phone_number) {
             phone_parts = number_to_parts(phone_number);
 
-            if (phone_parts.size() == 0)
+            if (phone_parts.size() < 3)
                 return;
 
             if (is_valid()) {
-                User* new_user = new User;
                 std::string user_num = phone_parts[2];
-                user_base[user_num] = new_user;
 
-                std::cout << "new user added\n";
+                if (find_user(user_num)) {
+                    std::cout << "user with this phone number already exists\n";
+                    return;
+                }
+                else {
+                    User* new_user = new User;
+            
+                    user_base[user_num] = new_user;
+                    std::cout << "new user added\n";
+                }
             }
             else {
                 std::cout << "the phone you entered is invalid for this operator\n";
             }
         };
-
 
         bool is_valid () {
             if (country_code.compare(phone_parts[0]) || operator_code.compare(phone_parts[1]))
@@ -158,21 +164,23 @@ class Country {
 
 
         Operator* create_new_operator(std::string op_code){
-        if (find_operator(op_code)){
-            std::cout << "country is already exists\n";
 
-            return operator_base[op_code];
-        }
-        else {
-            Operator* new_operator = new Operator;
-            operator_base[op_code] = new_operator;
+            if (find_operator(op_code)){
+                std::cout << "country is already exists\n";
 
-            new_operator->country_code  = country_code;
-            new_operator->operator_code = op_code;
+                return operator_base[op_code];
+            }
+            else {
+                Operator* new_operator = new Operator;
 
-            return new_operator;
-        }
-    };
+                operator_base[op_code] = new_operator;
+
+                new_operator->country_code  = country_code;
+                new_operator->operator_code = op_code;
+
+                return new_operator;
+            }
+        };
 
     bool find_operator(std::string operator_code) {
         if (operator_base.find(operator_code) != operator_base.end()) {
@@ -265,6 +273,7 @@ public:
 
 
     Country* create_new_country(std::string country_code) {
+
         if (find_country(country_code)){
             std::cout << "country is already exists\n";
 
@@ -303,17 +312,21 @@ int main () {
 
     class Switch new_switch;
 
-    Country* Russia = new_switch.create_new_country("+7"); //same here
+    Country*  Russia = new_switch.create_new_country("+7");
 
-    Operator* Beeline = Russia->create_new_operator("905"); //i add users into a copy of operators, so it does not work
+    Operator* Beeline = Russia->create_new_operator("905");
 
-    Beeline->create_new_user ("+7 905 7664566");
-    Beeline->create_new_user ("+7 905 1234578");
+    Beeline->create_new_user ("+7 905 7664566"); //print successfully added user
+    Beeline->create_new_user ("+7 905 7664566"); //print two same numbers are impossible
+    Beeline->create_new_user ("+8 906 7738766"); //print invalide country code, operator code
 
-    new_switch.send("+7 905 1234578", "hello");
-    
-    new_switch.read("+7 905 1234578");
-    new_switch.read("+7 905 7664566");
+    Beeline->create_new_user ("+7 905 1234578"); //print successfully added user
+
+    new_switch.send("+7 905 124578", "hello"); //print that number is incorrect
+    new_switch.send("+7 905 1234578", "how are u"); //print ok
+
+    new_switch.read("+7 905 1234578"); //print messages
+    new_switch.read("+7 905 7664566"); //print messages
 
 
     return 0;

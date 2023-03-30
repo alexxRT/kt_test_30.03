@@ -1,3 +1,0 @@
-/Users/aav/Documents/IT_Projects/GitHub/CS_4th_semester/KR_class5/build/CMakeFiles/main.dir
-/Users/aav/Documents/IT_Projects/GitHub/CS_4th_semester/KR_class5/build/CMakeFiles/edit_cache.dir
-/Users/aav/Documents/IT_Projects/GitHub/CS_4th_semester/KR_class5/build/CMakeFiles/rebuild_cache.dir
